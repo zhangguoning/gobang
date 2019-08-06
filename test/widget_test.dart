@@ -9,18 +9,31 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:gobang/main.dart';
-import 'package:gobang/net/websocket_client.dart';
+import 'package:gobang/net/webserver/websocket_client.dart';
 
 void main() {
+  test("testConnent", () async {
+    ClientSocketManager manager = await ClientSocketManager.getInstance()
+      ..addListener((data) {
+        print("来自JavaServer的回应: $data");
+      });
+//      ..sendMsg("来自flutter的问候1")
+//      ..sendMsg("来自flutter的问候2")
+//      ..sendMsg("来自flutter的问候3");
 
-  test("testConnent", (){
-    ClientSocketManager.getInstance(<String>(data){
-      print("received data from server: $data");
-    }).sendMsg("hello");
+    manager.sendMsg("来自flutter的问候1");
+    manager.sendMsg("来自flutter的问候2");
+    manager.sendMsg("来自flutter的问候3");
 
-    Future.delayed(Duration(seconds: 5),(){
-      print("delayed end!");
+
+
+    await Future.delayed(Duration(seconds: 5), () {
+     manager.close();
+     print("已关闭连接!");
+    });
+
+    await Future.delayed(Duration(seconds: 5),(){
+      print("关闭连接后再次尝试发送消息!");
     });
   });
-
 }

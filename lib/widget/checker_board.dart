@@ -22,11 +22,10 @@ class _CheckerboardState extends State<Checkerboard> {
   @override
   Widget build(BuildContext context) {
     _context = context;
-    CBPaint cBPaint = CBPaint(context);
     return Center(
       child: GestureDetector(
         child: CustomPaint(
-          painter: cBPaint,
+          painter: CBPaint(),
           size: Size(400, 400),
         ),
         onTapDown: (details) {
@@ -78,7 +77,7 @@ bool existSpecificChessman(Offset position, Player player) {
     }, orElse: () {
       return null;
     });
-    return cm != null && cm.ower == player;
+    return cm != null && cm.owner == player;
   }
   return false;
 }
@@ -90,7 +89,7 @@ bool existBlackChessman(Offset position) {
     }, orElse: () {
       return null;
     });
-    return cm != null && cm.ower == Player.BLACK;
+    return cm != null && cm.owner == Player.BLACK;
   }
   return false;
 }
@@ -102,7 +101,7 @@ bool existWhiteChessman(Offset position) {
     }, orElse: () {
       return null;
     });
-    return cm != null && cm.ower == Player.WHITE;
+    return cm != null && cm.owner == Player.WHITE;
   }
   return false;
 }
@@ -151,7 +150,7 @@ void fallChessman(Offset position,{bool isPlayer}){
     AI ai = AI(Player.WHITE);
     int score = ai.chessmanGrade(newChessman.position);
     int enemy = ai.chessmanGrade(newChessman.position,ownerPlayer : Player.BLACK);
-    print("[${newChessman.ower == Player.WHITE ? "电脑" : "玩家"}落子(${newChessman.ower == Player.WHITE ? "白方" : "黑方"})] 该子价值评估: 己方-$score, 敌方-$enemy");
+    print("[${newChessman.owner == Player.WHITE ? "电脑" : "玩家"}落子(${newChessman.owner == Player.WHITE ? "白方" : "黑方"})] 该子价值评估: 己方-$score, 敌方-$enemy");
 
     print("\n");
 
@@ -160,7 +159,7 @@ void fallChessman(Offset position,{bool isPlayer}){
       print("和棋!");
       return ;
     }
-    if(!result && newChessman.ower!=Player.WHITE ){
+    if(!result && newChessman.owner!=Player.WHITE ){
       Future.delayed(Duration(milliseconds: 50),(){
        Future<Offset> position =  AI(Player.WHITE).nextByAI();
        position.then((position){
@@ -179,7 +178,7 @@ bool isHaveAvailablePosition(){
 }
 
 void printFallChessmanInfo(Chessman newChessman){
-  print("[落子成功], 棋子序号:${newChessman.numberId} ,颜色:${newChessman.ower == Player.WHITE ? "白色" : "黑色"} , 位置 :(${newChessman.position.dx.toInt()} , ${newChessman.position.dy.toInt()})");
+  print("[落子成功], 棋子序号:${newChessman.numberId} ,颜色:${newChessman.owner == Player.WHITE ? "白色" : "黑色"} , 位置 :(${newChessman.position.dx.toInt()} , ${newChessman.position.dy.toInt()})");
 
 }
 
@@ -203,15 +202,15 @@ bool checkResult(Chessman newChessman) {
       i <= (currentX + 4 < LINE_COUNT ? currentX + 4 : LINE_COUNT);
       i++) {
     Offset position = Offset(i.toDouble(), currentY.toDouble());
-    if (existSpecificChessman(position, newChessman.ower)) {
-      winResult.add(Chessman(position, newChessman.ower));
+    if (existSpecificChessman(position, newChessman.owner)) {
+      winResult.add(Chessman(position, newChessman.owner));
       count++;
     } else {
       winResult.clear();
       count = 0;
     }
     if (count >= 5) {
-      print("胜利者产生: ${newChessman.ower == Player.WHITE ? "白色" : "黑色"}");
+      print("胜利者产生: ${newChessman.owner == Player.WHITE ? "白色" : "黑色"}");
       return true;
     }
   }
@@ -228,15 +227,15 @@ bool checkResult(Chessman newChessman) {
       j <= (currentY + 4 > LINE_COUNT ? LINE_COUNT : currentY + 4);
       j++) {
     Offset position = Offset(currentX.toDouble(), j.toDouble());
-    if (existSpecificChessman(position, newChessman.ower)) {
-      winResult.add(Chessman(position, newChessman.ower));
+    if (existSpecificChessman(position, newChessman.owner)) {
+      winResult.add(Chessman(position, newChessman.owner));
       count++;
     } else {
       winResult.clear();
       count = 0;
     }
     if (count >= 5) {
-      print("胜利者产生: ${newChessman.ower == Player.WHITE ? "白色" : "黑色"}");
+      print("胜利者产生: ${newChessman.owner == Player.WHITE ? "白色" : "黑色"}");
       return true;
     }
   }
@@ -252,15 +251,15 @@ bool checkResult(Chessman newChessman) {
   Offset offset2 = Offset((currentX - 4).toDouble(), (currentY + 4).toDouble());
   for (int i = 0; i < 10; i++) {
     Offset position = Offset(offset2.dx + i, offset2.dy - i);
-    if (existSpecificChessman(position, newChessman.ower)) {
-      winResult.add(Chessman(position, newChessman.ower));
+    if (existSpecificChessman(position, newChessman.owner)) {
+      winResult.add(Chessman(position, newChessman.owner));
       count++;
     } else {
       winResult.clear();
       count = 0;
     }
     if (count >= 5) {
-      print("胜利者产生: ${newChessman.ower == Player.WHITE ? "白色" : "黑色"}");
+      print("胜利者产生: ${newChessman.owner == Player.WHITE ? "白色" : "黑色"}");
       return true;
     }
   }
@@ -276,15 +275,15 @@ bool checkResult(Chessman newChessman) {
   Offset offset = Offset((currentX - 4).toDouble(), (currentY - 4).toDouble());
   for (int i = 0; i < 10; i++) {
     Offset position = Offset(offset.dx + i, offset.dy + i);
-    if (existSpecificChessman(position, newChessman.ower)) {
-      winResult.add(Chessman(position, newChessman.ower));
+    if (existSpecificChessman(position, newChessman.owner)) {
+      winResult.add(Chessman(position, newChessman.owner));
       count++;
     } else {
       winResult.clear();
       count = 0;
     }
     if (count >= 5) {
-      print("胜利者产生: ${newChessman.ower == Player.WHITE ? "白色" : "黑色"}");
+      print("胜利者产生: ${newChessman.owner == Player.WHITE ? "白色" : "黑色"}");
       return true;
     }
   }
@@ -293,13 +292,10 @@ bool checkResult(Chessman newChessman) {
 }
 
 class CBPaint extends CustomPainter {
-
-  BuildContext _context ;
   Canvas canvas;
   Paint painter;
   static const bool IS_DEBUG = true;
 
-  CBPaint(this._context);
   @override
   void paint(Canvas canvas, Size size) {
     this.canvas = canvas;
@@ -322,7 +318,6 @@ class CBPaint extends CustomPainter {
       canvas.drawLine(Offset(0, dy), Offset(size.width, dy), painter);
       if(IS_DEBUG){
         _drawText((i.toString()),Offset(-19, dy - _calcTrueTextSize(i.toString(),15.0).dy / 2));
-
       }
     }
 
@@ -375,7 +370,7 @@ class CBPaint extends CustomPainter {
   void _drawChessman(Chessman chessman) {
     painter
       ..style = PaintingStyle.fill
-      ..color = chessman.ower.color;
+      ..color = chessman.owner.color;
 
     Offset center = Offset(chessman.position.dx * ceilWidth, chessman.position.dy * ceilHeight);
     canvas.drawCircle(center,
@@ -386,12 +381,18 @@ class CBPaint extends CustomPainter {
         ..color = Colors.blue
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3.0;
-      canvas.drawCircle(center,5, painter);
+      canvas.drawCircle(center,min(ceilWidth / 2, ceilHeight / 2) - 2, painter);
     }
 
     if(IS_DEBUG){
-      Offset textSize = _calcTrueTextSize(chessman.numberId.toString(),15.0);
-      _drawText(chessman.numberId.toString(), Offset(center.dx - (textSize.dx / 2), center.dy-(textSize.dy / 2)));
+      double fontSize = 12.0;
+      Offset textSize = _calcTrueTextSize(chessman.numberId.toString(),fontSize);
+      _drawText(chessman.numberId.toString(),
+          Offset(center.dx - (textSize.dx / 2), center.dy-(textSize.dy / 2)),
+          color: chessman.owner==Player.BLACK?Colors.white:Colors.black,
+        textSize: fontSize
+
+      );
     }
 
   }
@@ -404,7 +405,7 @@ class CBPaint extends CustomPainter {
     return Offset(p.minIntrinsicWidth,p.height);
   }
 
-  void _drawText(String text , Offset offset){
+  void _drawText(String text , Offset offset ,{Color color ,double textSize}){
     ui.ParagraphBuilder builder = ui.ParagraphBuilder(ui.ParagraphStyle(
       textAlign: TextAlign.center,
       ellipsis: '...',
@@ -412,7 +413,7 @@ class CBPaint extends CustomPainter {
 
 
     ));
-    builder.pushStyle(ui.TextStyle(color: Colors.red,fontSize: 15.0));
+    builder.pushStyle(ui.TextStyle(color: color ?? Colors.red,fontSize: textSize ?? 15.0));
     builder.addText(text);
 
 
@@ -428,27 +429,27 @@ class CBPaint extends CustomPainter {
 }
 class Chessman {
   Offset position;
-  Player ower;
+  Player owner;
   int numberId = chessmanList.length;
 
   Chessman(this.position ,Player player);
 
   Chessman.white(this.position) {
-    ower = Player.WHITE;
+    owner = Player.WHITE;
   }
 
   Chessman.whiteXY(double x, double y) {
     this.position = Offset(x, y);
-    ower = Player.WHITE;
+    owner = Player.WHITE;
   }
 
   Chessman.black(this.position) {
-    ower = Player.BLACK;
+    owner = Player.BLACK;
   }
 
   Chessman.blackXY(double x, double y) {
     this.position = Offset(x, y);
-    ower = Player.BLACK;
+    owner = Player.BLACK;
   }
 }
 

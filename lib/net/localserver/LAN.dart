@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:gobang/bean/player.dart';
-import 'package:gobang/net/command.dart';
+import 'package:gobang/net/common/command.dart';
 import 'package:gobang/user/current_player.dart';
 import 'package:provider/provider.dart';
 

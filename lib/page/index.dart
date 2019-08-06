@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_getuuid/flutter_getuuid.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gobang/bean/player.dart';
-import 'package:gobang/net/LAN.dart';
+import 'package:gobang/net/localserver/LAN.dart';
 import 'package:gobang/page/pvp/network_battle.dart';
 import 'package:gobang/user/current_player.dart';
 import 'package:gobang/util/util.dart';

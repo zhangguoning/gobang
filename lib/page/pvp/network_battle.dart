@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:gobang/net/websocket_client.dart';
+import 'package:gobang/net/webserver/websocket_client.dart';
 import 'package:gobang/page/pvp/net_setting.dart';
 
 class LANOptionPage extends StatefulWidget {
@@ -66,12 +66,20 @@ class _LANOptionPageState extends State<LANOptionPage> {
           )),
     );
   }
-  void onEnterGameClicked(){
-
-    ClientSocketManager.getInstance(<String>(data){
+  ClientSocketManager manager ;
+  int count = 1 ;
+  void onEnterGameClicked() async {
+    manager ??= await ClientSocketManager.getInstance()
+      ..addListener((data) {
       print("received data from server: $data");
-    }).sendMsg("hello");
-
+    });
+    manager.sendMsg("click $count");
+//    ClientSocketManager.getInstance()
+//      ..addListener((data) {
+//        print("received data from server: $data");
+//      })
+//      ..sendMsg("呵呵呵呵呵");
+    count++;
   }
 
   void onNetSettingClicked(BuildContext context){
