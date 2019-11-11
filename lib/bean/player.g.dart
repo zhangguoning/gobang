@@ -8,21 +8,45 @@ part of 'player.dart';
 
 Player _$PlayerFromJson(Map<String, dynamic> json) {
   return Player(
-      json['ip'] as String, json['deviceId'] as String, json['name'] as String);
+      json['ip'] as String,
+      json['deviceId'] as String,
+      json['name'] as String,
+      _$enumDecodeNullable(_$UserStatusEnumMap, json['status']),
+      json['fightingId'] as String,
+      json['isFirst'] as bool);
 }
 
 Map<String, dynamic> _$PlayerToJson(Player instance) => <String, dynamic>{
       'ip': instance.ip,
       'name': instance.name,
-      'deviceId': instance.deviceId
+      'deviceId': instance.deviceId,
+      'status': _$UserStatusEnumMap[instance.status],
+      'fightingId': instance.fightingId,
+      'isFirst': instance.isFirst
     };
 
-String _$PlayerToJsonString(Player instance ,{Map<String,dynamic> jsonMap}){
-  Map<String,dynamic> map = jsonMap!=null ? jsonMap : _$PlayerToJson(instance);
-  List<String> keys = map.keys.toList();
-  StringBuffer buffer = StringBuffer("{");
-  for(String k in keys){
-    buffer.write("\"$k\":\"${map[k]}\",");
+T _$enumDecode<T>(Map<T, dynamic> enumValues, dynamic source) {
+  if (source == null) {
+    throw ArgumentError('A value must be provided. Supported values: '
+        '${enumValues.values.join(', ')}');
   }
-  return buffer.toString().substring(0,buffer.length-1) + "}";
+  return enumValues.entries
+      .singleWhere((e) => e.value == source,
+          orElse: () => throw ArgumentError(
+              '`$source` is not one of the supported values: '
+              '${enumValues.values.join(', ')}'))
+      .key;
 }
+
+T _$enumDecodeNullable<T>(Map<T, dynamic> enumValues, dynamic source) {
+  if (source == null) {
+    return null;
+  }
+  return _$enumDecode<T>(enumValues, source);
+}
+
+const _$UserStatusEnumMap = <UserStatus, dynamic>{
+  UserStatus.FREE: 'FREE',
+  UserStatus.WAITING: 'WAITING',
+  UserStatus.PLAYING: 'PLAYING'
+};

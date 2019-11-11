@@ -107,7 +107,7 @@ class AI {
       }, orElse: () {
         return null;
       });
-      return cm != null && cm.ower == player;
+      return cm != null && cm.owner == player;
     }
     return false;
   }

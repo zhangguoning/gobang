@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gobang/page/pvp/Invite_fighting_listen.dart';
 
 class PlayerListPage extends StatefulWidget{
   @override
@@ -8,18 +9,16 @@ class PlayerListPage extends StatefulWidget{
 
 }
 
-class _PlayerListPageState extends State<PlayerListPage>{
+class _PlayerListPageState extends InviteFightingConfirmWidgetState<PlayerListPage>{
+
 
   @override
-  Widget build(BuildContext context) {
-    return buildPlayerListPageState();
+  Widget buildView(BuildContext context) {
+    return Container();
   }
 
-  Widget buildPlayerListPageState(){
-
+  @override
+  Future<bool> onBackspacePress() {
+    return Future.value(true);
   }
-}
-
-Future<String> getPlayerList()async{
-
 }

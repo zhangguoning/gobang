@@ -1,21 +1,24 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:gobang/bean/player.dart';
-import 'package:gobang/net/command.dart';
+import 'package:gobang/net/common/command.dart';
 import 'package:gobang/user/current_player.dart';
 import 'package:provider/provider.dart';
+
+import 'socket_stream_transformer.dart';
 
 typedef OnServerReceived  = void Function(String data);
 typedef OnClientReceived  = void Function(String data);
 
-class LocalServer {
+class LocalServerManager {
 
   final OnServerReceived onServerReceived ;
   final OnClientReceived onClientReceived;
 
-  LocalServer({this.onServerReceived,this.onClientReceived}){
+  LocalServerManager({this.onServerReceived,this.onClientReceived}){
     initServerSocket();
   }
 
@@ -31,7 +34,8 @@ class LocalServer {
     if (serverSocket == null) {
       serverSocket = await ServerSocket.bind(LOCAL_IP, PORT);
       serverSocket.listen((socket) {
-        socket.transform(utf8.decoder).listen((data) {
+
+        socket.transform<String>(SocketDecoder()).listen((data) {
           onServerReceived("接收到来自 ${socket.address.host} 的消息:$data");
           socket.writeln('hello cilent! , this msg from server! count = ${++serverCount}');
         });
@@ -56,7 +60,9 @@ class LocalServer {
     if(socket == null || socket.address.host != ip){
       socket = await Socket.connect(ip, PORT);
 
-      socket.transform(utf8.decoder).listen((data){
+
+      Stream input = stdin.transform(utf8.decoder).transform(new LineSplitter());
+      socket.transform(SocketDecoder()).listen((data){
         onClientReceived(data);
         print("客户端接收到消息:$data");
       },onError: (error){
@@ -76,3 +82,4 @@ class LocalServer {
 
   }
 }
+

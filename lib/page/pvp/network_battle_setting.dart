@@ -1,8 +1,15 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:gobang/net/websocket_client.dart';
+import 'package:gobang/bean/invite_fighting.dart';
+import 'package:gobang/net/common/api_helper.dart';
+import 'package:gobang/net/common/route_observer_manager.dart';
+import 'package:gobang/net/internet/websocket_connect_api.dart';
+import 'package:gobang/page/pvp/Invite_fighting_listen.dart';
 import 'package:gobang/page/pvp/net_setting.dart';
+import 'package:gobang/page/pvp/select_adversary.dart';
+
+import 'bluetooth_setting.dart';
 
 class LANOptionPage extends StatefulWidget {
   @override
@@ -11,14 +18,29 @@ class LANOptionPage extends StatefulWidget {
   }
 }
 
-class _LANOptionPageState extends State<LANOptionPage> {
+class _LANOptionPageState extends InviteFightingConfirmWidgetState<LANOptionPage>{
+
+  _LANOptionPageState() : super();
+
+
   @override
-  Widget build(BuildContext context) {
+  void initState() {
+    super.initState();
+    print("_LANOptionPageState -> initState() -> context = $context");
+    WidgetsBinding.instance.addObserver(this);
+//    RouteObserverManager.getInstance().getObserver().subscribe(this, ModalRoute.of(context));
+  }
+
+
+  @override
+  Widget buildView(BuildContext context) {
     return buildLANOptionPageState();
   }
 
+
   Widget buildLANOptionPageState() {
     return Scaffold(
+      key: Key("_LANOptionPageState_key"),
       appBar: AppBar(
         title: Text(
           "联网对战",
@@ -28,6 +50,7 @@ class _LANOptionPageState extends State<LANOptionPage> {
       body: buildBodyWidget(),
     );
   }
+
 
   Widget buildBodyWidget() {
     return Container(
@@ -66,19 +89,22 @@ class _LANOptionPageState extends State<LANOptionPage> {
           )),
     );
   }
-  void onEnterGameClicked(){
-
-    ClientSocketManager.getInstance(<String>(data){
-      print("received data from server: $data");
-    }).sendMsg("hello");
-
+  void onEnterGameClicked() async {
+    Navigator.of(context).push(MaterialPageRoute(builder: (context){
+      return SelectAdversaryPage();
+    }));
   }
 
   void onNetSettingClicked(BuildContext context){
     Navigator.of(context).push(MaterialPageRoute(builder: (context){
-      return NetSettingPage();
+//      return NetSettingPage();
+      return BlueToothSettingPage();
     }));
 
+  }
+  @override
+  Future<bool> onBackspacePress() {
+    return Future.value(true);
   }
 
 }

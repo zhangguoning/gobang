@@ -3,11 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_getuuid/flutter_getuuid.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gobang/bean/player.dart';
-import 'package:gobang/net/LAN.dart';
-import 'package:gobang/page/pvp/network_battle.dart';
+import 'package:gobang/page/pvp/network_battle_setting.dart';
 import 'package:gobang/user/current_player.dart';
 import 'package:gobang/util/util.dart';
 import 'package:provider/provider.dart';
+import 'dart:math' as math;
 
 import 'game_main.dart';
 
@@ -21,7 +21,6 @@ class IndexPage extends StatefulWidget {
 }
 
 class _IndexPageState extends State<IndexPage> {
-  LocalServer ls;
 
   TextEditingController controller;
 
@@ -33,35 +32,35 @@ class _IndexPageState extends State<IndexPage> {
   @override
   void initState() {
     super.initState();
-    init();
     initPlayerInfo();
   }
 
-  void init() {
-    if (controller == null) {
-      controller = TextEditingController()
-        ..addListener(() {
-          print('input ${controller.text}');
-        });
-    }
-    if (ls == null) {
-      ls = LocalServer(onServerReceived: (data) {
-        serverReceivedData = data;
-        invalidate();
-      }, onClientReceived: (data) {
-        clientReceivedData = data;
-        invalidate();
-      });
+  String randomNum(int length){
+    if(length == null || length <= 0){
+      return "0";
+    }else{
+      math.Random random = math.Random();
+      StringBuffer sb = StringBuffer();
+      for(int i = 0 ; i < length ; i++){
+        if(i == 0){
+          sb.write(1 + random.nextInt(8));
+        }else{
+          sb.write(random.nextInt(9));
+        }
+      }
+      return sb.toString();
     }
   }
 
   Future<void> initPlayerInfo() async {
     String deviceId = await FlutterGetuuid.platformUid;
+    String name = "Player-${randomNum(5)}";
     Player user = Provider.of<CurrentPlayer>(context).user;
-    if (user == null) {
-      user = Player.formDeviceId(deviceId);
-    } else {
+    if (user == null || user.deviceId == "0") {
+      user ??= Player.formDeviceId(deviceId);
       user.deviceId = deviceId;
+      user.status = UserStatus.FREE;
+      user.name = name;
     }
 
     ///设置用户名 和 ip

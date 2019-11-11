@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_getuuid/flutter_getuuid.dart';
+import 'package:gobang/net/common/navigator_listener.dart';
+import 'package:gobang/net/common/route_observer_manager.dart';
 import 'package:gobang/page/game_main.dart';
 import 'package:gobang/page/index.dart';
 import 'package:gobang/user/current_player.dart';
@@ -9,17 +11,22 @@ import 'bean/player.dart';
 
 void main() => runApp(MultiProvider(
     providers: [
-    Provider<CurrentPlayer>.value(value: CurrentPlayer(Player.formDeviceId(""))),
+    Provider<CurrentPlayer>.value(value: CurrentPlayer(Player.formDeviceId("0"))),
   ],
   child: MyApp(),
 ));
+
+
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+
     return MaterialApp(
       title: 'Flutter Demo',
+//      navigatorObservers:[NavigatorListener.getInstance()],
+      navigatorObservers:[RouteObserverManager.getInstance().getObserver()],
       theme: ThemeData(
         // This is the theme of your application.
         //

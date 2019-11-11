@@ -4,6 +4,7 @@ part 'player_list.g.dart';
 
 @JsonSerializable()
 class PlayerList{
+
   @JsonKey(name: 'players')
   List<Player> players;
 

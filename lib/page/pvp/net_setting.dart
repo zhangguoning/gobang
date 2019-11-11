@@ -11,7 +11,6 @@ class NetSettingPage extends StatefulWidget{
 }
 
 class _NetSettingPageState extends State<NetSettingPage>{
-
   TextEditingController controller;
 
   @override
@@ -31,7 +30,13 @@ class _NetSettingPageState extends State<NetSettingPage>{
 
   @override
   Widget build(BuildContext context) {
-    return _buildNetSettingPageState(context);
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("网络设置"),
+        centerTitle: true,
+      ),
+      body: _buildNetSettingPageState(context),
+    );
   }
 
   Widget _buildNetSettingPageState(BuildContext context){
