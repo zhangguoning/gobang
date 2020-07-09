@@ -1,5 +1,9 @@
 buildscript {
     repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+        mavenLocal()
         google()
         jcenter()
     }
@@ -11,6 +15,10 @@ buildscript {
 
 allprojects {
     repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+        mavenLocal()
         google()
         jcenter()
     }
