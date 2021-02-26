@@ -36,7 +36,9 @@ class BufferMap<V>{
   BufferMap.maxCount(this.maxCount);
 
   void put(int key , V value){
-    buffer.putIfAbsent(key, (){
+    buffer.update(key,  (V value){
+      return value;
+    },ifAbsent: (){
       return value;
     });
     _checkSize();
