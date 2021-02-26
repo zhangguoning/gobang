@@ -36,7 +36,7 @@ class BufferMap<V>{
   BufferMap.maxCount(this.maxCount);
 
   void put(int key , V value){
-    buffer.update(key,  (V value){
+    buffer.update(key,  (V val){
       return value;
     },ifAbsent: (){
       return value;
