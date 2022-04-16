@@ -43,7 +43,8 @@ class GameDataWidget extends InheritedWidget{
   GameDataWidget({Key key ,@required this.gameData ,@required Widget child ,}) : super(key:key,child:child);
 
   static GameDataWidget of(BuildContext context) {
-    return context?.inheritFromWidgetOfExactType(GameDataWidget);
+    return context.dependOnInheritedWidgetOfExactType(aspect:GameDataWidget);
+    // return context?.inheritFromWidgetOfExactType(GameDataWidget);
   }
 
   @override

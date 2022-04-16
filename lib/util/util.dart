@@ -1,4 +1,6 @@
 
+import 'package:gobang/common/global_config.dart';
+
 class Util{
 
    static const String REGEX_IP = "((2[0-4]\\d|25[0-5]|[01]?\\d\\d?)\\.){3}(2[0-4]\\d|25[0-5]|[01]?\\d\\d?)";
@@ -47,6 +49,13 @@ class StringUtil{
     return count == emptyCount;
   }
 
+}
+
+
+log( Object msg,{String tag = "gobang-flutter"}){
+  if(Build.DEBUG){
+    print("$tag : $msg" );
+  }
 }
 
 

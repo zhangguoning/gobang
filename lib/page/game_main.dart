@@ -20,21 +20,45 @@ class _GameMainPageState extends State<GameMainPage> {
         child: Column(
           children: <Widget>[
             checkerboard,
-            GestureDetector(
-              child: Container(
-                  padding: EdgeInsets.only(top: 50),
-                  child: Text(
-                    "Clear All",
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 30,
-                    ),
-                  )),
-              onTap: () {
-                checkerboard.clear();
-                setState(() {});
-              },
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                GestureDetector(
+                  child: Container(
+                      padding: EdgeInsets.only(top: 50),
+                      child: Text(
+                        "清空",
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 30,
+                          decoration: TextDecoration.none,
+                        ),
+                      )),
+                  onTap: () {
+                    checkerboard.clear();
+                    setState(() {});
+                  },
+                ),
+                GestureDetector(
+                  child: Container(
+                      padding: EdgeInsets.only(top: 50),
+                      child: Text(
+                        "托管",
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 30,
+                          decoration: TextDecoration.none,
+                        ),
+                      )),
+                  onTap: () {
+                    continueByAI = true;
+                    trusteeship();
+                    setState(() {});
+                  },
+                ),
+              ],
             ),
+
           ],
         ),
       ),

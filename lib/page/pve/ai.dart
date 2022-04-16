@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:gobang/util/buffer_container.dart';
 import 'package:gobang/widget/checker_board.dart' as game;
 import 'dart:math' as math;
+import 'package:gobang/util/util.dart';
+
+import 'package:gobang/widget/checker_board.dart';
 
 class AI {
   static const int WIN = 10000;
@@ -25,73 +28,123 @@ class AI {
   static const int LINE_COUNT = game.LINE_COUNT;
 
   game.Player computerPlayer;
+  List<Chessman> chessmanList;
 
-  AI(this.computerPlayer);
+  AI(this.computerPlayer){
+    chessmanList ??= game.chessmanList;
+  }
 
-  Future<Offset> nextByAI({bool isPrintMsg = true}) async {
+  AI.chessmanList(this.computerPlayer,this.chessmanList);
+
+  Future<Offset> nextByAI({bool isPrintMsg = false}) async {
+    Offset pos = urgent();
+    if(pos!=null){
+      return pos;
+    }
 
     //优化思路,取我方,敌方 各5个最优点位置,
     // 防中带攻: 如果判断应该防守,则在敌方5个最优位置中找出我方优势最大的点落子
     // 攻中带防: 如果判断应该进攻,则在己方5个最优位置中找出敌方优势最大的点落子
+    BufferMap<Offset> ourPositions   = ourBetterPosition();
+    BufferMap<Offset> enemyPositions = enemyBetterPosition();
 
-    ///我方下一步最优位置
+  Offset position = bestPosition(ourPositions,enemyPositions);
+  assert(position!=null);
+  return position;
+  }
+
+  Offset urgent(){
+    BufferMap<Offset> enemy = enemyBetterPosition();
+    Offset urgentPosition ;
+    for(int key in enemy.keySet){
+      if(key >= ALIVE4){
+        urgentPosition = enemy[key];
+        break;
+      }
+    }
+
+    BufferMap<Offset> our = ourBetterPosition();
+    for(int key in our.keySet){
+      if(key >= ALIVE4){
+        return our[key];
+      }
+    }
+    return urgentPosition;
+  }
+
+  void updateChessmanList(List<Chessman> chessmanList){
+    this.chessmanList = chessmanList;
+  }
+
+  ///我方下一步较好的${maxCount}个位置
+  BufferMap<Offset> ourBetterPosition({maxCount = 5}){
     Offset offset = Offset.zero;
-    BufferMap<Offset> myOptimumMap = BufferMap.maxCount(5);
+    BufferMap<Offset> ourMap = BufferMap.maxCount(maxCount);
     for (int i = 0; i <= LINE_COUNT; i++) {
       for (int j = 0; j <= LINE_COUNT; j++) {
         offset = Offset(i.toDouble(), j.toDouble());
         if (isBlankPosition(offset)) {
           int score = chessmanGrade(offset);
-          if(myOptimumMap.minKey() < score){
-            myOptimumMap.put(score, Offset(offset.dx, offset.dy));
+          if(ourMap.minKey() < score){
+            ourMap.put(score, Offset(offset.dx, offset.dy));
           }
 
         }
       }
     }
+    return ourMap;
+  }
 
-    ///敌方下一步最优位置
-    offset = Offset.zero;
-    BufferMap<Offset> opponentOptimumMap = BufferMap.maxCount(5);
+  ///敌方下一步较好的${maxCount}个位置
+  BufferMap<Offset>  enemyBetterPosition({maxCount = 5}){
+    Offset offset = Offset.zero;
+    BufferMap<Offset> enemyMap = BufferMap.maxCount(5);
+    log("查找敌方最优落子位置");
+
+    int count = 0;
     for (int i = 0; i <= LINE_COUNT; i++) {
       for (int j = 0; j <= LINE_COUNT; j++) {
         offset = Offset(i.toDouble(), j.toDouble());
         if (isBlankPosition(offset)) {
+          DateTime start = DateTime.now();
           int score = chessmanGrade(offset, ownerPlayer : computerPlayer == game.Player.BLACK ? game.Player.WHITE : game.Player.BLACK );
-          if(opponentOptimumMap.minKey() < score){
-            opponentOptimumMap.put(score, Offset(offset.dx, offset.dy));
+          DateTime end = DateTime.now();
+          count++;
+          int time = end.millisecondsSinceEpoch - start.millisecondsSinceEpoch;
+          if(time > 5){
+            log("查找敌方最优落子位置耗时：$time");
+          }
+          if(enemyMap.minKey() < score){
+            enemyMap.put(score, Offset(offset.dx, offset.dy));
           }
         }
       }
     }
-
-
-  Offset position = calculationOptimumPosition(myOptimumMap,opponentOptimumMap);
-  assert(position!=null);
-  return position;
+    log("查找地方最优落子位置次数：$count");
+    return enemyMap;
   }
 
-  Offset calculationOptimumPosition(BufferMap<Offset> myOptimumMap , BufferMap<Offset> opponentOptimumMap){
+  Offset bestPosition(BufferMap<Offset> ourPositions , BufferMap<Offset> enemyPositions){
     Offset position;
     double maxScore = 0 ;
 
     ///魔法值 1.2 , 0.65 , 0.35
-    if(opponentOptimumMap.maxKey() / myOptimumMap.maxKey() > 1.2){
-      for (int key in opponentOptimumMap.keySet){
-        int attackScore = chessmanGrade(opponentOptimumMap[key]);
+    if(enemyPositions.maxKey() / ourPositions.maxKey() > 1.2){
+      for (int key in enemyPositions.keySet){
+        int attackScore = chessmanGrade(enemyPositions[key]);
         double score = key * 1.0 + attackScore * 0.7;
         if(score >= maxScore){
           maxScore = score ;
-          position = opponentOptimumMap[key];
+          position = enemyPositions[key];
         }
       }
     }else{
-      for (int key in myOptimumMap.keySet){
-        int defenseScore = chessmanGrade(myOptimumMap[key]);
+      for (int key in ourPositions.keySet){
+        int defenseScore = chessmanGrade(ourPositions[key]);
         double score = key * 1.0 + defenseScore * 0.7;
         if(score >= maxScore){
           maxScore = score ;
-          position = myOptimumMap[key];
+          position = ourPositions[key];
         }
       }
     }
@@ -101,8 +154,8 @@ class AI {
 
   ///判断某个位置上是否有 {player} 的棋子
   bool existSpecificChessman(Offset position, game.Player player) {
-    if (game.chessmanList != null && game.chessmanList.isNotEmpty) {
-      var cm = game.chessmanList.firstWhere((game.Chessman c) {
+    if (chessmanList != null && chessmanList.isNotEmpty) {
+      var cm = chessmanList.firstWhere((game.Chessman c) {
         return c.position.dx == position.dx && c.position.dy == position.dy;
       }, orElse: () {
         return null;
@@ -135,12 +188,12 @@ class AI {
   }
 
   ///计算某个棋子对于 ownerPlayer 的分值
-  int chessmanGrade(Offset chessmanPosition ,{game.Player ownerPlayer ,bool isCanPrintMsg = true}) {
+  int chessmanGrade(Offset chessmanPosition ,{game.Player ownerPlayer ,bool isCanPrintMsg = false}) {
     int score = 0;
     List<Offset> myChenssman = List<Offset>();
     Offset offset;
     Offset first = chessmanPosition;
-    game.Player player = ownerPlayer;
+    Player player = ownerPlayer;
     player ??= computerPlayer;
 
     ///横向
@@ -234,7 +287,7 @@ class AI {
 
     int ss = score + scoringAloneChessman(first);
     if(isCanPrintMsg){
-      print("该子分值为: $ss ,其中单子得分:${scoringAloneChessman(first)}, 组合得分:$score");
+      log("该子分值为: $ss ,其中单子得分:${scoringAloneChessman(first)}, 组合得分:$score");
     }
 
     int jumpAlive4Count = getJumpAlive4Count([first], player);
@@ -268,19 +321,19 @@ class AI {
           score += limitMax(getJumpAlive4Count(myChenssman, player)) * JUMP_ALIVE4 ;
 
           if(isCanPrintMsg){
-            print("$printMsg 活2成立, 得分+$ALIVE2");
+            log("$printMsg 活2成立, 得分+$ALIVE2");
           }
 
         } else if (isLowerDeath2(myChenssman)) {
           score += LOWER_DEATH2;
           if(isCanPrintMsg){
-            print("$printMsg 低级死2成立 ,得分+$LOWER_DEATH2");
+            log("$printMsg 低级死2成立 ,得分+$LOWER_DEATH2");
           }
 
         } else {
           score += DEEP_DEATH2;
           if(isCanPrintMsg){
-            print("$printMsg 死2成立 ,得分+$DEEP_DEATH2");
+            log("$printMsg 死2成立 ,得分+$DEEP_DEATH2");
           }
         }
         break;
@@ -289,17 +342,17 @@ class AI {
           score += ALIVE3;
           score += limitMax(getJumpAlive4Count(myChenssman, player)) * JUMP_ALIVE4 ;
           if(isCanPrintMsg){
-            print("$printMsg 活3成立, 得分+$ALIVE3");
+            log("$printMsg 活3成立, 得分+$ALIVE3");
           }
         } else if (isLowerDeath3(myChenssman)) {
           score += LOWER_DEATH3;
           if(isCanPrintMsg){
-            print("$printMsg 低级死3成立 ,得分+$LOWER_DEATH3");
+            log("$printMsg 低级死3成立 ,得分+$LOWER_DEATH3");
           }
         } else {
           score += DEEP_DEATH3;
           if(isCanPrintMsg){
-            print("$printMsg 死3成立 ,得分+$DEEP_DEATH3");
+            log("$printMsg 死3成立 ,得分+$DEEP_DEATH3");
           }
         }
         break;
@@ -308,19 +361,19 @@ class AI {
         if (isAlive4(myChenssman)) {
           score += ALIVE4;
           if(isCanPrintMsg){
-            print("$printMsg 活4成立, 得分+$ALIVE4");
+            log("$printMsg 活4成立, 得分+$ALIVE4");
           }
 
         } else if (isLowerDeath4(myChenssman)) {
           score += LOWER_DEATH4;
           if(isCanPrintMsg){
-            print("$printMsg 低级死4成立 ,得分+$LOWER_DEATH4");
+            log("$printMsg 低级死4成立 ,得分+$LOWER_DEATH4");
           }
 
         } else {
           score += DEEP_DEATH4;
           if(isCanPrintMsg){
-            print("$printMsg 死4成立 ,得分+$DEEP_DEATH4");
+            log("$printMsg 死4成立 ,得分+$DEEP_DEATH4");
           }
         }
         break;
@@ -349,7 +402,7 @@ class AI {
       Offset(offset.dx + 1, offset.dy + 1),
     ];
     for (offset in list) {
-      if (isBlankPosition(offset)) {
+      if (offset.dx > 0 && offset.dy > 0 && isBlankPosition(offset)) {
         score++;
       }
     }
@@ -812,8 +865,8 @@ class AI {
 
   ///判断某个位置上是否没有棋子
   bool isBlankPosition(Offset position) {
-    if (game.chessmanList != null && game.chessmanList.isNotEmpty) {
-      var cm = game.chessmanList.firstWhere((game.Chessman c) {
+    if (chessmanList != null && chessmanList.isNotEmpty) {
+      var cm = chessmanList.firstWhere((game.Chessman c) {
         return c.position.dx == position.dx && c.position.dy == position.dy;
       }, orElse: () {
         return null;

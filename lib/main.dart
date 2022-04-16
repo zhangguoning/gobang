@@ -9,13 +9,15 @@ import 'package:provider/provider.dart';
 
 import 'bean/player.dart';
 
-void main() => runApp(MultiProvider(
+void main(){
+  Provider.debugCheckInvalidValueType = null;
+  runApp(MultiProvider(
     providers: [
-    Provider<CurrentPlayer>.value(value: CurrentPlayer(Player.formDeviceId("0"))),
-  ],
-  child: MyApp(),
-));
-
+      Provider<CurrentPlayer>.value(value: CurrentPlayer(Player.formDeviceId("0"))),
+    ],
+    child: MyApp(),
+  ));
+}
 
 
 class MyApp extends StatelessWidget {
@@ -85,7 +87,9 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> initPlayerInfo() async{
-    String deviceId = await FlutterGetuuid.platformUid;
+    String deviceId = await FlutterGetuuid.platformUid.timeout(Duration(seconds: 2),onTimeout:  (){
+      return "";
+    } );
     Player user = Provider.of<CurrentPlayer>(context).user;
     if(user==null){
       user = Player.formDeviceId(deviceId);

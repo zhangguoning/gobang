@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:gobang/page/pve/ab_ai.dart';
 import 'package:gobang/page/pve/ai.dart';
 const int LINE_COUNT = 14;
 class Checkerboard extends StatefulWidget {
@@ -13,6 +14,7 @@ class Checkerboard extends StatefulWidget {
   }
 
   void clear() {
+    continueByAI = false;
     chessmanList?.clear();
     winResult?.clear();
   }
@@ -125,12 +127,16 @@ void onTapDown(TapDownDetails details) {
   fallChessman(Offset(x.toDouble(),y.toDouble()));
 }
 
-AI ai = AI(Player.WHITE);
+AB_AI ai = AB_AI(Player.WHITE);
 int  computeChessmanValue(int x , int y , bool isPlayer){
   return isPlayer ? ai.chessmanGrade(Offset(x.toDouble(), y.toDouble()), ownerPlayer: Player.BLACK) : ai.chessmanGrade(Offset(x.toDouble(), y.toDouble()));
 }
 
 void fallChessman(Offset position,{bool isPlayer}){
+  if(winResult.isNotEmpty){
+    continueByAI = false;
+    return ;
+  }
   Chessman newChessman;
   if (chessmanList == null ||
       chessmanList.isEmpty ||
@@ -147,7 +153,6 @@ void fallChessman(Offset position,{bool isPlayer}){
   bool can = addToChessmanList(newChessman);
   if(can){
     printFallChessmanInfo(newChessman);
-    AI ai = AI(Player.WHITE);
     int score = ai.chessmanGrade(newChessman.position);
     int enemy = ai.chessmanGrade(newChessman.position,ownerPlayer : Player.BLACK);
     print("[${newChessman.owner == Player.WHITE ? "电脑" : "玩家"}落子(${newChessman.owner == Player.WHITE ? "白方" : "黑方"})] 该子价值评估: 己方-$score, 敌方-$enemy");
@@ -160,17 +165,33 @@ void fallChessman(Offset position,{bool isPlayer}){
       return ;
     }
     if(!result && newChessman.owner!=Player.WHITE ){
-      Future.delayed(Duration(milliseconds: 50),(){
-       Future<Offset> position =  AI(Player.WHITE).nextByAI();
+      Future.delayed(Duration(milliseconds: 20),(){
+       Future<Offset> position = ai.nextByAI();
        position.then((position){
          fallChessman(position);
          RefreshNotification().dispatch(_context);
+         if(continueByAI){
+           trusteeship();
+         }
        });
       });
     }
   }else{
     print("不能在此处落子!");
   }
+}
+
+bool continueByAI = false;
+
+void trusteeship(){
+  Future.delayed(Duration(milliseconds: 20),(){
+    Future<Offset> position =  AI(Player.BLACK).nextByAI();
+    position.then((position){
+      fallChessman(position);
+      RefreshNotification().dispatch(_context);
+
+    });
+  });
 }
 
 bool isHaveAvailablePosition(){
@@ -325,8 +346,8 @@ class CBPaint extends CustomPainter {
       double dx = ceilWidth * i;
       canvas.drawLine(Offset(dx, 0), Offset(dx, size.height), painter);
       if(IS_DEBUG){
-        _drawText(i.toString(),Offset(dx - _calcTrueTextSize(i.toString(),15.0).dx /2, -18));
-//        _drawText((String.fromCharCode(i + 65)),Offset(dx - _calcTrueTextSize(String.fromCharCode(i + 65),15.0).dx /2, -18));
+        // _drawText(i.toString(),Offset(dx - _calcTrueTextSize(i.toString(),15.0).dx /2, -18));
+       _drawText((String.fromCharCode(i + 65)),Offset(dx - _calcTrueTextSize(String.fromCharCode(i + 65),15.0).dx /2, -18));
       }
     }
     _drawMarkPoints();
@@ -431,8 +452,9 @@ class Chessman {
   Offset position;
   Player owner;
   int numberId = chessmanList.length;
+  int score;
 
-  Chessman(this.position ,Player player);
+  Chessman(this.position ,this.owner);
 
   Chessman.white(this.position) {
     owner = Player.WHITE;
@@ -451,6 +473,11 @@ class Chessman {
     this.position = Offset(x, y);
     owner = Player.BLACK;
   }
+
+  @override
+  String toString() {
+    return 'Chessman{position: (${position.dx},${position.dy}), owner: ${owner == Player.BLACK ? "BLANK" : "WHITE"}, score: $score, numberId: $numberId}';
+  }
 }
 
 class Player {
@@ -462,7 +489,10 @@ class Player {
   Color color ;
   Player(this.color);
 
-
+  @override
+  String toString() {
+    return 'Player{${this == BLACK ? "BLACK" : "WHITE"}}';
+  }
 }
 class RefreshNotification extends Notification{
   RefreshNotification();

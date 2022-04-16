@@ -8,3 +8,7 @@ class Timer{
   static const int TIME_OUT = 10;
   static const int WAITING_TIME = 10;
 }
+
+class Build{
+  static const bool DEBUG = false;
+}
