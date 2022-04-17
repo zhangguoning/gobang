@@ -21,7 +21,7 @@ class ChessNode{
   /// 当前节点的父节点
   ChessNode parentNode;
   /// 当前节点的所有子节点
-  List<ChessNode> childrenNode = List.empty(growable: true);
+  List<ChessNode> childrenNode = [];
   /// 当前节点的值
   num value = double.nan;
   /// 当前节点的类型(我方/敌方)
@@ -59,57 +59,138 @@ class AB_AI extends AI {
     ChessNode root =  createGameTree();
     DateTime create = DateTime.now();
     print('创建博弈树耗时：${create.millisecondsSinceEpoch - start.millisecondsSinceEpoch}');
+    // maxMinSearch(root);
+    DateTime maxMinSearch = DateTime.now();
+    print('MaxMin搜索耗时：${maxMinSearch.millisecondsSinceEpoch - create.millisecondsSinceEpoch}');
     alphaBetaSearch(root);
     DateTime search = DateTime.now();
-    print('博弈树搜索耗时：${search.millisecondsSinceEpoch - create.millisecondsSinceEpoch}');
+    print('Alpha-Beta搜索耗时：${search.millisecondsSinceEpoch - maxMinSearch.millisecondsSinceEpoch}');
+
 
     print("查找次数: $count");
     return root.checked.position;
   }
 
 
-  /// alpha-beta 剪枝算法，计算节点值
-  int alphaBetaSearch(ChessNode root){
+  /// alpha-beta 剪枝算法
+  num alphaBetaSearch(ChessNode current){
+    count++;
+    if(current.childrenNode.isEmpty){
+      return current.value;
+    }
+
+    //该枝已被剪掉
+    if(current.parentNode!=null && !current.parentNode.childrenNode.contains(current)){
+      ChessNode parent = current.parentNode;
+      return parent.type == ChildType.MAX ? parent.minValue : parent.maxValue;
+    }
+
+    List<ChessNode> children = current.childrenNode;
+    if(current.type == ChildType.MIN){
+      num parentMin = current.parentNode?.minValue ?? double.negativeInfinity;
+      int index = 0;
+      for (ChessNode node in children) {
+        index ++;
+        //当前节点node的父节点(current)为MIN节点，也就是取所有子节点值中最小的值，
+        //换句话说：这个节点(node)产生的最大值不会高于所有子节点中的最小值，因此取两者间的最小值
+        num newCurrentMax = math.min(current.maxValue, alphaBetaSearch(node));//K
+
+        //current节点的值不能比current.parentNode的最小值还小，
+        //若不符合这个条件则current节点没有继续搜索下去的必要
+        //alpha剪枝
+        if (newCurrentMax <= parentMin) { //V->J
+          current.childrenNode = current.childrenNode.sublist(0, index);
+          return parentMin;
+        }
+
+        //因为当前节点为MIN节点，如果发现一个比当前最大值还小的值，则更新当前节点的最大值为这个新值
+        if (newCurrentMax < current.maxValue) {//A1->K
+          current.maxValue = newCurrentMax;
+          current.value = node.value;
+          current.checked = node.current;
+        }
+      }
+      //当遍历完成当前节点后，如果发现父节点的最小值小于当前节点的最大值，则更新父节点的最小值
+      if(current.maxValue > parentMin){//K->E
+        current.parentNode?.minValue = current.maxValue;
+        current.parentNode?.value = current.value;
+        current.parentNode?.checked = current.current;
+      }
+      return current.maxValue;
+    }else{//beta(MAX节点)
+      num parentMax = current.parentNode?.maxValue ?? double.infinity;
+      int index = 0;
+      for(ChessNode node in children) {
+       index ++;
+       //当前节点(node)的父节点(current)为MAX节点，也就是取所有子节点中最大的值
+       //换句话说：这个父节点(current)所产生的最小值不会低于所有子节点中的最大值，因此取两者间的最大值
+       num newCurrentMin = math.max(current.minValue, alphaBetaSearch(node));
+
+       //current节点的父节点为MIN节点，如果current节点值的下界(current.minValue)比父节点(current.parentNode)的值的上界还大的话，
+       //则父节点(current.parentNode)不会取当前节点current路径，故无需在搜索
+       //beta剪枝
+       if(parentMax < newCurrentMin){//M->G
+         current.childrenNode = current.childrenNode.sublist(0,index);
+         return parentMax;
+       }
+
+       //因为当前节点为MAX节点，如果发现一个比当前最小值还大的新值，则更新当前节点的最小值为这个新值
+       if(newCurrentMin > current.minValue){
+         current.minValue = newCurrentMin;
+         current.value = node.value;
+         current.checked = node.current;
+       }
+      }
+      //当遍历完成当前节点后，如果发现当前节点的最小值比父节点的最大值还小的话，则更新父节点的最大值
+      if(current.minValue < parentMax){//D->B
+        current.parentNode?.maxValue = current.minValue;
+        current.parentNode?.value = current.value;
+        current.parentNode?.checked = current.current;
+      }
+      return current.minValue;
+    }
+  }
+
+  /// 极大值极小值算法
+  num maxMinSearch(ChessNode root){
     if(root.childrenNode.isEmpty){
       return root.value;
     }
-
     List<ChessNode> children = root.childrenNode;
     if(root.type == ChildType.MIN){
       for(ChessNode node in children){
-        if(alphaBetaSearch(node) < root.maxValue){
+        if(maxMinSearch(node) < root.maxValue){
           //当前节点的父节点为MIN节点，也就是取所有子节点值中最小的值，
           //换句话说：这个父节点产生的最大值不会高于所有子节点中的最小值，因此更新父节点的maxValue
           root.maxValue = node.value;
           root.value = node.value;
           root.checked = node.current;
         }else{
-          // 当前节点的值大于了父节点的最大值，由于父节点是MIN节点，因此不会取该值，alpha剪枝
+          // 当前节点的值大于了父节点的最大值，由于父节点是MIN节点，因此不会取该值
           // 换句话说：当前为对手回合，对手已经有了一个可以让我方收益更低的选择，因此对手不会考虑一个比让我们当前收益更高的选择
           continue;
         }
       }
     }else{//beta
       for(ChessNode node in children){
-        if(alphaBetaSearch(node) > root.minValue){
+        if(maxMinSearch(node) > root.minValue){
           // 当前节点的父节点为MAX节点，也就是取所有子节点中最大的值
           // 换句话说：这个父节点所产生的最小值不会低于所有子节点中的最大值，因此更新父节点的minValue
           root.minValue = node.value;
           root.value = node.value;
           root.checked = node.current;
         }else{
-          // 当前节点的值小于父节点的最小值，由于父节点值MAX节点，因此不会取该值，beta剪枝
+          // 当前节点的值小于父节点的最小值，由于父节点值MAX节点，因此不会取该值
           // 换句话说：当前为自己回合，已经有了一个可以使我方收益更高的选择，那么就不会再考虑比这个收益更低的选择了
           continue;
         }
       }
-
     }
     return root.value;
   }
 
 
-  /// Max-Min算法，生成博弈树
+
   ChessNode createGameTree(){
     ChessNode root = ChessNode()
       ..depth = 0
@@ -127,7 +208,7 @@ class AB_AI extends AI {
 
 
     // BufferChessmanList ourPosList = ourBestPosition();
-    BufferChessmanList enemyPosList = enemyBestPosition(maxCount: 10);
+    BufferChessmanList enemyPosList = enemyBestPosition(chessmanList,maxCount: 5);
 
     OffsetList list = OffsetList()
       // ..addAll(ourPosList.toList())
@@ -177,9 +258,9 @@ class AB_AI extends AI {
 
     var start = DateTime.now();
     // BufferChessmanList ourPosList = ourBestPosition();
-    BufferChessmanList enemyPosList = enemyBestPosition(maxCount: 10);
+    BufferChessmanList enemyPosList = enemyBestPosition(list,maxCount: 5);
     var value = DateTime.now();
-    count++;
+
     log('查找高分落子位置耗时：${value.millisecondsSinceEpoch - start.millisecondsSinceEpoch}');
 
 
@@ -357,7 +438,7 @@ class AB_AI extends AI {
     return result;
   }
 
-  BufferChessmanList ourBestPosition({maxCount = 5}){
+  BufferChessmanList ourBestPosition(List<Chessman> chessmanList,{maxCount = 5}){
     return highScorePosition(our,chessmanList);
   }
 
@@ -366,7 +447,7 @@ class AB_AI extends AI {
     for(int x = 0 ; x <= LINE_COUNT ; x++){
       for(int y = 0; y <= LINE_COUNT ; y++){
         Offset pos = Offset(x.toDouble(), y.toDouble());
-        if(isBlankPosition(pos)){
+        if(isBlankPosition(pos,chessmanList: currentChessmanList)){
           Chessman chessman = Chessman(pos, player);
           int chessScore = chessmanScore(chessman,currentChessmanList);
           int posScore = positionScore(pos);
@@ -381,14 +462,15 @@ class AB_AI extends AI {
     return list;
   }
 
-  BufferChessmanList  enemyBestPosition({maxCount = 5}){
+  BufferChessmanList  enemyBestPosition(List<Chessman> chessmanList,{maxCount = 5}){
     return highScorePosition(enemy,chessmanList);
   }
 
-  bool isBlankPosition(Offset position){
+  bool isBlankPosition(Offset position, {List<Chessman> chessmanList}){
     if(!isEffectivePosition(position)){
       return false;
     }
+    chessmanList ??= this.chessmanList;
     if(chessmanList.isEmpty){
       return true;
     }

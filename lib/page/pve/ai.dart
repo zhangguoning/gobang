@@ -128,7 +128,7 @@ class AI {
     Offset position;
     double maxScore = 0 ;
 
-    ///魔法值 1.2 , 0.65 , 0.35
+    ///魔法值 1.2 , 0.7
     if(enemyPositions.maxKey() / ourPositions.maxKey() > 1.2){
       for (int key in enemyPositions.keySet){
         int attackScore = chessmanGrade(enemyPositions[key]);
