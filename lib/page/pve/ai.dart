@@ -37,7 +37,7 @@ class AI {
   AI.chessmanList(this.computerPlayer,this.chessmanList);
 
   Future<Offset> nextByAI({bool isPrintMsg = false}) async {
-    Offset pos = urgent();
+    Offset pos = needDefenses();
     if(pos!=null){
       return pos;
     }
@@ -53,12 +53,12 @@ class AI {
   return position;
   }
 
-  Offset urgent(){
+  Offset needDefenses(){
     BufferMap<Offset> enemy = enemyBetterPosition();
-    Offset urgentPosition ;
+    Offset defensesPosition ;
     for(int key in enemy.keySet){
       if(key >= ALIVE4){
-        urgentPosition = enemy[key];
+        defensesPosition = enemy[key];
         break;
       }
     }
@@ -69,7 +69,7 @@ class AI {
         return our[key];
       }
     }
-    return urgentPosition;
+    return defensesPosition;
   }
 
   void updateChessmanList(List<Chessman> chessmanList){

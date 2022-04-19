@@ -37,7 +37,7 @@ class ChessNode{
 }
 
 class AB_AI extends AI {
-  int maxDepth = 3;
+  int maxDepth = 5;
   List<Chessman> tempChessList ;
   Player our ,enemy;
 
@@ -49,7 +49,7 @@ class AB_AI extends AI {
   int count = 0;
 
   Future<Offset> nextByAI({bool isPrintMsg = false}) async {
-    Offset pos = urgent();
+    Offset pos = needDefenses();
     if(pos!=null){
       return pos;
     }
@@ -60,14 +60,14 @@ class AB_AI extends AI {
     DateTime create = DateTime.now();
     print('创建博弈树耗时：${create.millisecondsSinceEpoch - start.millisecondsSinceEpoch}');
     // maxMinSearch(root);
-    DateTime maxMinSearch = DateTime.now();
-    print('MaxMin搜索耗时：${maxMinSearch.millisecondsSinceEpoch - create.millisecondsSinceEpoch}');
+    // DateTime maxMinSearch = DateTime.now();
+    // print('MaxMin搜索耗时：${maxMinSearch.millisecondsSinceEpoch - create.millisecondsSinceEpoch}');
     alphaBetaSearch(root);
     DateTime search = DateTime.now();
-    print('Alpha-Beta搜索耗时：${search.millisecondsSinceEpoch - maxMinSearch.millisecondsSinceEpoch}');
+    print('Alpha-Beta 搜索耗时：${search.millisecondsSinceEpoch - create.millisecondsSinceEpoch}');
 
 
-    print("查找次数: $count");
+    print("Alpha-Beta 搜索次数: $count");
     return root.checked.position;
   }
 
